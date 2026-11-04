@@ -2,6 +2,7 @@ import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function SiteHeader() {
   return (
@@ -23,6 +24,7 @@ export function SiteHeader() {
           <Link href="/analyze" className={cn(buttonVariants({ size: "sm" }))}>
             Get started
           </Link>
+          <ModeToggle />
         </nav>
       </div>
     </header>

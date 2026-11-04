@@ -15,7 +15,8 @@ Zero budget: everything runs on free tiers.
 ## Build order
 
 1. Skeleton — **DONE**
-2. AI integration (Groq + Gemini fallback, Zod contract, prompt) — next
+2. AI integration (Groq + Gemini fallback, Zod contract, prompt) — **DONE**
+3. Report UI — **DONE** (folded into Phase 2)
 3. Report UI
 4. Document upload (PDF/DOCX/TXT)
 5. Persistence + sharing (Neon + Drizzle)
@@ -38,8 +39,20 @@ Zero budget: everything runs on free tiers.
 - Shell quirk: use `npm.cmd` / `npx.cmd` (PowerShell blocks `.ps1` shims).
 - shadcn base-nova uses `@base-ui/react` (no `asChild`; use `buttonVariants` or `render`).
 
-## Verification (Phase 1)
+## Phase 2 — files added
+
+- `lib/validators.ts` — Zod schemas: `ProjectPlanSchema` (single contract for AI/DB/UI), `AnalyzeInputSchema`, types.
+- `lib/ai/prompt.ts` — `buildSystemPrompt` (role + strict JSON spec + anti-injection rules), `buildUserPrompt` (delimited `<idea>`/`<document>`/`<constraints>`).
+- `lib/ai/groq.ts` — Groq client (OpenAI-compatible, JSON mode, timeout).
+- `lib/ai/gemini.ts` — Gemini fallback client (responseMimeType JSON, timeout).
+- `lib/rate-limit.ts` — Upstash sliding window (10/min) with in-memory fallback + per-user daily cap.
+- `app/api/analyze/route.ts` — POST endpoint: size guard, IP rate limit, Zod input validation, Groq→Gemini fallback, JSON parse + Zod output validation with one retry, 503/502/429/400 errors.
+- `components/report-view.tsx` — renders a ProjectPlan (goals, requirements, tech stack, timeline/milestones, risks, recommendations, next steps).
+- `app/analyze/page.tsx` — client form (idea + constraints) + loading/error states + report render.
+
+## Verification (Phase 2)
 
 - `tsc --noEmit`: clean
 - `eslint .`: clean
-- `next build`: success; routes `/`, `/analyze`, `/projects`, `/_not-found` static.
+- `next build`: success; routes `/`, `/analyze`, `/projects`, `/_not-found` static; `/api/analyze` dynamic.
+- Manual: validation (400), no-provider (503), rate limit (429) all confirmed via curl against dev server. Full AI flow pending a real `GROQ_API_KEY`.
