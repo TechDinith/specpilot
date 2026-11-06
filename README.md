@@ -47,6 +47,33 @@ cp .env.example .env.local
 At minimum, set one AI provider key (`GROQ_API_KEY` or `GEMINI_API_KEY`) to use
 the analyze feature.
 
+To enable saving/sharing projects, create a free Neon database at
+https://neon.tech and set `DATABASE_URL`. Then push the schema:
+
+```bash
+npm run db:push
+```
+
+### Authentication (Neon Auth)
+
+SpecPilot uses Neon's Managed Better Auth. To enable:
+
+1. In your Neon project, go to **Auth** → **Enable** (or run `neon neon-auth enable`).
+   - Requires an AWS-region project without IP Allow / Private Networking.
+2. Copy `NEON_AUTH_BASE_URL` and `NEON_AUTH_JWKS_URL` from the Auth page (or `neon env pull`).
+3. Generate a cookie secret: `openssl rand -base64 32` → `NEON_AUTH_COOKIE_SECRET`.
+4. Add all three to `.env.local`.
+5. Restart the dev server.
+
+Auth pages live at `/auth/sign-in` and `/auth/sign-up`.
+
+Add these scripts to `package.json` if not present:
+
+```json
+"db:push": "drizzle-kit push",
+"db:studio": "drizzle-kit studio"
+```
+
 ### Run
 
 ```bash

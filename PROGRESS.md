@@ -17,6 +17,9 @@ Zero budget: everything runs on free tiers.
 1. Skeleton — **DONE**
 2. AI integration (Groq + Gemini fallback, Zod contract, prompt) — **DONE**
 3. Report UI — **DONE** (folded into Phase 2)
+4. Document upload (PDF/DOCX/TXT/MD) — **DONE**
+5. Persistence + sharing (Neon + Drizzle) — **DONE**
+6. Auth (Neon Auth / Managed Better Auth) — **DONE (code)**
 3. Report UI
 4. Document upload (PDF/DOCX/TXT)
 5. Persistence + sharing (Neon + Drizzle)
@@ -55,4 +58,56 @@ Zero budget: everything runs on free tiers.
 - `tsc --noEmit`: clean
 - `eslint .`: clean
 - `next build`: success; routes `/`, `/analyze`, `/projects`, `/_not-found` static; `/api/analyze` dynamic.
-- Manual: validation (400), no-provider (503), rate limit (429) all confirmed via curl against dev server. Full AI flow pending a real `GROQ_API_KEY`.
+- Manual: validation (400), no-provider (503), rate limit (429) all confirmed via curl against dev server. Full AI flow working with Groq free tier (gpt-oss-120b).
+
+## Phase 3 — files added
+
+- `app/api/upload/route.ts` — POST: multipart file, size cap (5MB), MIME/ext allowlist (PDF/DOCX/TXT/MD), text extraction (unpdf for PDF, mammoth for DOCX, plain read for text), whitespace normalization, 8K char cap, returns `{ filename, chars, text }`.
+- `app/analyze/page.tsx` — file picker + upload progress + filename/char count + remove; passes `documentText` to `/api/analyze`.
+
+## Verification (Phase 3)
+
+- `tsc --noEmit`: clean
+- `eslint .`: clean
+- `next build`: success; routes include `/api/upload` (dynamic).
+- Manual: TXT, PDF (extracted "Dummy PDF file"), DOCX (extracted 8972 chars) all confirmed via curl.
+
+## Phase 4 — files added
+
+- `lib/db/schema.ts` — `projects` table (uuid, title, idea, constraints, document_text, plan jsonb, provider, timestamps).
+- `lib/db/index.ts` — Drizzle client over Neon HTTP; null when DATABASE_URL unset (graceful degradation).
+- `drizzle.config.ts` — drizzle-kit config.
+- `app/api/projects/route.ts` — GET list / POST create (Zod validation).
+- `app/api/projects/[id]/route.ts` — GET one.
+- `app/p/[id]/page.tsx` — public shareable report view (force-dynamic).
+- `app/projects/page.tsx` — saved projects list (force-dynamic, empty/no-DB states).
+- `app/analyze/page.tsx` — "Save project" button + shareable link after save.
+
+## Verification (Phase 4)
+
+- `tsc --noEmit`: clean
+- `eslint .`: clean
+- `next build`: success; routes include `/api/projects`, `/api/projects/[id]`, `/p/[id]`, `/projects`.
+- Manual (no DB): `/api/projects` → 503 "Database not configured"; graceful degradation confirmed.
+- Full save/share flow requires a Neon DATABASE_URL (see README).
+
+## Phase 5 — files added (Neon Auth)
+
+- `lib/auth/server.ts` — `createNeonAuth` (lazy, env-guarded) via Proxy.
+- `lib/auth/client.ts` — `createAuthClient()` from `@neon/auth/next`.
+- `app/api/auth/[...path]/route.ts` — auth handler (GET/POST/PUT/DELETE/PATCH).
+- `proxy.ts` — Next 16 middleware using `auth.middleware()` (public routes: /, /analyze, /projects, /p).
+- `components/auth-providers.tsx` — QueryClientProvider + AuthProvider (Better Auth UI).
+- `app/auth/[path]/page.tsx` — Better Auth UI `<Auth path={path} />`.
+- `components/site-header.tsx` — server component, shows user email + SignOutButton or Sign in link.
+- `components/sign-out-button.tsx` — client sign-out.
+- `lib/db/schema.ts` — added `userId` column to `projects`.
+- `app/api/projects/route.ts` — GET filtered by userId, POST requires session + stores userId.
+- `app/projects/page.tsx` — shows user's projects; prompts sign-in if not logged in.
+
+## Verification (Phase 5)
+
+- `tsc --noEmit`: clean
+- `eslint .`: clean
+- `next build`: success; routes include `/auth/[path]`, proxy middleware.
+- Runtime requires `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` (and DB for saving).
