@@ -30,9 +30,11 @@ export async function SiteHeader() {
           <Link href="/analyze" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
             Analyze
           </Link>
-          <Link href="/projects" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-            Projects
-          </Link>
+          {user && (
+            <Link href="/projects" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              Projects
+            </Link>
+          )}
           {user ? (
             <>
               <span className="hidden text-sm text-muted-foreground sm:inline">

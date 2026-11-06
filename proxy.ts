@@ -5,7 +5,7 @@ const hasAuth = Boolean(process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_
 const middleware = hasAuth
   ? auth.middleware({
       loginUrl: "/auth/sign-in",
-      publicRoutes: ["/", "/analyze", "/projects", "/p"],
+      publicRoutes: ["/", "/analyze", "/p", "/api"],
     })
   : () => undefined;
 

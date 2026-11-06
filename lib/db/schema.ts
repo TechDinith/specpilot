@@ -1,4 +1,14 @@
-import { pgTable, uuid, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, jsonb, integer, primaryKey } from "drizzle-orm/pg-core";
+
+export const usage = pgTable(
+  "usage",
+  {
+    userId: text("user_id").notNull(),
+    day: text("day").notNull(), // YYYY-MM-DD
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.day] })],
+);
 
 export const projects = pgTable("projects", {
   id: uuid("id").primaryKey().defaultRandom(),

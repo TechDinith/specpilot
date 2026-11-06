@@ -6,6 +6,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { ProjectPlan } from "@/lib/validators";
 import { siteConfig } from "@/config/site";
 import { ReportView } from "@/components/report-view";
+import { ExportButtonsLazy as ExportButtons } from "@/components/export-buttons-lazy";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -234,12 +235,24 @@ export default function AnalyzePage() {
             </p>
             <div className="flex items-center gap-2">
               {savedId ? (
-                <Link
-                  href={`/p/${savedId}`}
-                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-                >
-                  View shared link
-                </Link>
+                <>
+                  <button
+                    type="button"
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
+                    onClick={() => {
+                      const url = `${window.location.origin}/p/${savedId}`;
+                      navigator.clipboard.writeText(url).catch(() => {});
+                    }}
+                  >
+                    Copy
+                  </button>
+                  <Link
+                    href={`/p/${savedId}`}
+                    className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                  >
+                    View
+                  </Link>
+                </>
               ) : (
                 <Button
                   size="sm"
@@ -268,13 +281,11 @@ export default function AnalyzePage() {
             </p>
           )}
           {savedId && (
-            <p className="mb-4 text-sm text-muted-foreground">
-              Saved. Shareable link:{" "}
-              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                /p/{savedId}
-              </code>
-            </p>
+            <p className="mb-4 text-sm text-muted-foreground">Saved.</p>
           )}
+          <div className="mb-4">
+            <ExportButtons plan={plan} title={plan.title} />
+          </div>
           <ReportView plan={plan} />
         </div>
       )}

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { ReportView } from "@/components/report-view";
+import { ExportButtonsLazy as ExportButtons } from "@/components/export-buttons-lazy";
 import type { ProjectPlan } from "@/lib/validators";
 
 export default async function SharedProjectPage({
@@ -30,11 +31,14 @@ export default async function SharedProjectPage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">{row.title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Shared project plan · {new Date(row.createdAt).toLocaleDateString()}
-        </p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{row.title}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {new Date(row.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+        <ExportButtons plan={row.plan as ProjectPlan} title={row.title} />
       </div>
       <ReportView plan={row.plan as ProjectPlan} />
     </div>

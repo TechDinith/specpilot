@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CopyLinkButton } from "@/components/copy-link-button";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,10 @@ export default async function ProjectsPage() {
     } catch {
       user = null;
     }
+  }
+
+  if (!user) {
+    redirect("/auth/sign-in");
   }
 
   const rows =
@@ -42,15 +48,6 @@ export default async function ProjectsPage() {
         </Link>
       </div>
 
-      {!user && (
-        <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-          <Link href="/auth/sign-in" className="underline">
-            Sign in
-          </Link>{" "}
-          to see your saved projects.
-        </div>
-      )}
-
       {user && !db && (
         <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
           Database not configured. Set <code>DATABASE_URL</code> to enable saving.
@@ -65,21 +62,25 @@ export default async function ProjectsPage() {
 
       <div className="space-y-3">
         {rows.map((p) => (
-          <Link
+          <div
             key={p.id}
-            href={`/p/${p.id}`}
-            className="block rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm transition hover:bg-muted/40"
+            className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm transition hover:bg-muted/40"
           >
             <div className="flex items-center justify-between gap-3">
-              <h2 className="font-semibold">{p.title}</h2>
-              <span className="text-xs text-muted-foreground">
-                {new Date(p.createdAt).toLocaleDateString()}
-              </span>
+              <Link href={`/p/${p.id}`} className="font-semibold hover:underline">
+                {p.title}
+              </Link>
+              <div className="flex items-center gap-2">
+                <CopyLinkButton url={`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/p/${p.id}`} />
+                <span className="text-xs text-muted-foreground">
+                  {new Date(p.createdAt).toLocaleDateString()}
+                </span>
+              </div>
             </div>
-            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+            <Link href={`/p/${p.id}`} className="mt-1 block line-clamp-2 text-sm text-muted-foreground">
               {p.idea}
-            </p>
-          </Link>
+            </Link>
+          </div>
         ))}
       </div>
     </div>

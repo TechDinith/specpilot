@@ -19,6 +19,9 @@ export function AuthProviders({ children }: { children: React.ReactNode }) {
           const target = to.startsWith("//") ? "/" : to;
           if (replace) router.replace(target);
           else router.push(target);
+          // Refresh server components (header) so auth state updates without
+          // a manual page reload.
+          router.refresh();
         }}
         Link={Link}
         redirectTo="/"

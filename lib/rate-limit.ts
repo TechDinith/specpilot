@@ -54,15 +54,46 @@ export function getRateLimiter(): Limiter {
   return cached;
 }
 
-// Per-user daily cap (in-memory; replace with DB counter in Phase 5).
-const daily = new Map<string, { count: number; day: string }>();
+// Per-user / per-IP daily cap. Uses DB when available, falls back to in-memory.
 const DAILY_CAP = 10;
+const daily = new Map<string, { count: number; day: string }>();
 
-export function checkDailyCap(userId: string): boolean {
+export async function checkDailyCap(key: string): Promise<boolean> {
   const day = new Date().toISOString().slice(0, 10);
-  const entry = daily.get(userId);
+
+  // Try DB first.
+  try {
+    const { db } = await import("@/lib/db");
+    if (db) {
+      const { usage } = await import("@/lib/db/schema");
+      const { eq, and } = await import("drizzle-orm");
+      const rows = await db
+        .select()
+        .from(usage)
+        .where(and(eq(usage.userId, key), eq(usage.day, day)))
+        .limit(1);
+
+      const current = rows[0]?.count ?? 0;
+      if (current >= DAILY_CAP) return false;
+
+      if (rows[0]) {
+        await db
+          .update(usage)
+          .set({ count: current + 1 })
+          .where(and(eq(usage.userId, key), eq(usage.day, day)));
+      } else {
+        await db.insert(usage).values({ userId: key, day, count: 1 });
+      }
+      return true;
+    }
+  } catch {
+    // Fall through to in-memory.
+  }
+
+  // In-memory fallback.
+  const entry = daily.get(key);
   if (!entry || entry.day !== day) {
-    daily.set(userId, { count: 1, day });
+    daily.set(key, { count: 1, day });
     return true;
   }
   if (entry.count >= DAILY_CAP) return false;

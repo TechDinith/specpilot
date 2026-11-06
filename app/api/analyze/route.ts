@@ -4,8 +4,9 @@ import { AnalyzeInputSchema } from "@/lib/validators";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/ai/prompt";
 import { callGroq } from "@/lib/ai/groq";
 import { callGemini } from "@/lib/ai/gemini";
-import { getRateLimiter } from "@/lib/rate-limit";
+import { getRateLimiter, checkDailyCap } from "@/lib/rate-limit";
 import { ProjectPlanSchema } from "@/lib/validators";
+import { auth } from "@/lib/auth/server";
 
 const MAX_BODY_BYTES = 50_000;
 
@@ -28,6 +29,24 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: "Too many requests. Please slow down." },
       { status: 429, headers: { "X-RateLimit-Remaining": String(remaining) } },
+    );
+  }
+
+  // Daily cap (per user if logged in, else per IP).
+  let capKey = `ip:${ip}`;
+  if (process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_COOKIE_SECRET) {
+    try {
+      const { data: session } = await auth.getSession();
+      if (session?.user?.id) capKey = `user:${session.user.id}`;
+    } catch {
+      // ignore
+    }
+  }
+  const allowed = await checkDailyCap(capKey);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Daily analysis limit reached (10/day). Try again tomorrow." },
+      { status: 429 },
     );
   }
 
