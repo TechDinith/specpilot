@@ -5,12 +5,12 @@ const hasAuth = Boolean(process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_
 const middleware = hasAuth
   ? auth.middleware({
       loginUrl: "/auth/sign-in",
-      publicRoutes: ["/", "/analyze", "/p", "/api"],
+      publicRoutes: ["/", "/analyze", "/p", "/api", "/googledf41cbb3e682b374.html"],
     })
   : () => undefined;
 
 export default middleware;
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|googled.*\\.html).*)"],
 };

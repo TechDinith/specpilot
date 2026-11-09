@@ -4,7 +4,7 @@ AI-powered project planning assistant. Turn a rough project idea into a concrete
 plan — requirements, recommended tech stack, milestones, timeline, effort
 estimate, risks, and next steps.
 
-**Live demo:** https://specpilot.vercel.app _(replace with your URL)_
+**Live demo:** https://specpilotai.vercel.app
 
 ## Features
 
@@ -156,6 +156,3 @@ specpilot/
 
 CI runs on push/PR via `.github/workflows/ci.yml` (lint + typecheck + build).
 
-## License
-
-All rights reserved.
