@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          # Dummy values so the build can collect page data without real secrets.
+          # The app degrades gracefully when these are absent, but providing
+          # them keeps the build green in CI.
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEON_AUTH_BASE_URL: https://example.neon.tech/auth
+          NEON_AUTH_COOKIE_SECRET: ci-dummy-secret-at-least-32-chars-long
+          DATABASE_URL: postgres://user:pass@localhost:5432/db
+          GROQ_API_KEY: ""
+          GEMINI_API_KEY: ""

@@ -1,20 +1,21 @@
+"use client";
+
 import Link from "next/link";
-import { auth } from "@/lib/auth/server";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth/client";
 import { siteConfig } from "@/config/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
-import { SignOutButton } from "@/components/sign-out-button";
 
-export async function SiteHeader() {
-  let user: { email?: string | null } | null = null;
-  if (process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_COOKIE_SECRET) {
-    try {
-      const { data: session } = await auth.getSession();
-      user = session?.user ?? null;
-    } catch {
-      user = null;
-    }
+export function SiteHeader() {
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const router = useRouter();
+
+  async function handleSignOut() {
+    await authClient.signOut();
+    router.refresh();
   }
 
   return (
@@ -40,7 +41,13 @@ export async function SiteHeader() {
               <span className="hidden text-sm text-muted-foreground sm:inline">
                 {user.email}
               </span>
-              <SignOutButton />
+              <button
+                type="button"
+                className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                onClick={handleSignOut}
+              >
+                Sign out
+              </button>
             </>
           ) : (
             <Link href="/auth/sign-in" className={cn(buttonVariants({ size: "sm" }))}>
